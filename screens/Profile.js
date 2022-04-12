@@ -1,156 +1,162 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useDebugValue, useEffect, useState } from "react";
-import {View, Text,Button,StyleSheet,Image} from "react-native";
+import { View, Text, Button, StyleSheet, Image } from "react-native";
 import Consatnts from "expo-constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
-import { pickImage,askForPermission, uploadImage } from "../utility";
+import { pickImage, askForPermission, uploadImage } from "../utility";
 import { auth, db } from "../firebase";
 import { updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
+import SimpleToast from "react-native-simple-toast";
 
-
-function Profile(){
-    const [displayName, setDisplayName]=useState("");
-    const [selectedImage, setSelectedImage]=useState(null);
-    const [permissionStatus, setPermissionStatus]=useState(null);
-    const navigation =useNavigation();
+function Profile() {
+    const [displayName, setDisplayName] = useState("");
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [permissionStatus, setPermissionStatus] = useState(null);
+    const navigation = useNavigation();
     useEffect(() => {
-        (async ()=>{
-            const status = await askForPermission();
-            setPermissionStatus(status);
+        (async () => {
+            try {
+                const status = await askForPermission();
+                setPermissionStatus(status);
+            } catch (e) {
+                alert("If you not give permission, You can't take Photo!");
+            }
         })()
-    },[])
-    async function handelNextPress(){
-       const user = auth.currentUser
-       let PhotoURL;
-       if(selectedImage){
-        const{url} = await uploadImage(selectedImage,`images/${user.uid}`, "profilePicture");
-        PhotoURL = url;
-       }
-       const userData = {
-           displayName,
-           email:user.email
-       }
-       if(PhotoURL){
-           userData.PhotoURL= PhotoURL;
-       }
-       await Promise.all([
-           updateProfile(user,userData),
-           setDoc(doc(db,"users",user.uid),{...userData,uid:user.uid})
-       ])
+    }, [])
+    async function handelNextPress() {
+        if(displayName == ""){
+            SimpleToast.showWithGravity("Please Enter Name", SimpleToast.LONG, SimpleToast.CENTER);
+            return false;
+        }
+        const user = auth.currentUser
+        let PhotoURL;
+        if (selectedImage) {
+            const { url } = await uploadImage(selectedImage, `images/${user.uid}`, "profilePicture");
+            PhotoURL = url;
+        }
+        const userData = {
+            displayName,
+            email: user.email
+        }
+        if (PhotoURL) {
+            userData.PhotoURL = PhotoURL;
+        }
+        await Promise.all([
+            updateProfile(user, userData),
+            setDoc(doc(db, "users", user.uid), { ...userData, uid: user.uid })
+        ])
         navigation.navigate('Home');
     }
-    async function handelProfilePhoto(){
+    async function handelProfilePhoto() {
         const result = await pickImage();
-        if(!result.cancelled){
+        if (!result.cancelled) {
             setSelectedImage(result.uri)
         }
     }
-     
-    if(!permissionStatus){
+
+    if (!permissionStatus) {
         return <Text>Loading...</Text>
     }
-    if(permissionStatus !== 'granted'){
-        return <Text>You need to allow this permission</Text>
-        
+    if (permissionStatus !== 'granted') {
+        alert("If you not give permission, You can't take Photo!");
     }
-    return(
-    <React.Fragment>
-        <StatusBar style="auto"/>
-        <View style={{
-            flex:1,
-            justifyContent:"center",
-            alignItems:"center",
-            paddingTop: Consatnts.statusBarHeight + 20,
-            padding:20 
+    return (
+        <React.Fragment>
+            <StatusBar style="auto" />
+            <View style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                paddingTop: Consatnts.statusBarHeight + 20,
+                padding: 20
             }}>
-        <Text style={{
-            fontSize:22,
-            color:"#710193",
-            fontWeight:"bold"
-        }} >
-         Profile Info
-        </Text>
-        <Text style={{ 
-            fontSize:16,
-            color:"#710193",
-            fontWeight:"normal",
-            marginTop:10
-        }}>
-            Please provide your name and profile photo
-        </Text> 
-        <TouchableOpacity 
-        onPress={handelProfilePhoto}
-        style={{
-            marginTop:30,
-            borderRadius:120,
-            width:120,
-            height:120,
-            backgroundColor: '#E9CFEC',
-            alignItems:'center',
-            justifyContent:"center",            
-            }}>
-            {!selectedImage 
-            ? (<MaterialCommunityIcons name="camera-plus" color="grey" size={45}/>)
-            : <Image source={{uri: selectedImage}}
-                style={{width:"100%",height:"100%",borderRadius:120}}
-            />}
-        </TouchableOpacity>
-        <View style={styles.Container}>
-        <TextInput
-        placeholder="Type your name..." 
-        value={displayName }
-        onChangeText={setDisplayName} 
-        style={styles.tName}
-        />
-        <View style={{borderRadius:25,marginTop:20}}>
-        <TouchableOpacity style={{
-            backgroundColor:'#710193' ,
-            // borderRadius:20,
-            height:'auto',
-            alignContent:'center' 
-      
-            }}
-        onPress={handelNextPress}
-        disabled={!displayName}
-        >
-        <Text style={{alignSelf:'center',padding:9,fontSize:20,color:'#ffffff'}}>Next</Text>
-        </TouchableOpacity>
-        </View>
-        </View>
-        </View>
-    </React.Fragment>
-)
+                <Text style={{
+                    fontSize: 22,
+                    color: "#710193",
+                    fontWeight: "bold"
+                }} >
+                    Profile Info
+                </Text>
+                <Text style={{
+                    fontSize: 16,
+                    color: "#710193",
+                    fontWeight: "normal",
+                    marginTop: 10
+                }}>
+                    Please provide your name and profile photo
+                </Text>
+                <TouchableOpacity
+                    onPress={handelProfilePhoto}
+                    style={{
+                        marginTop: 30,
+                        borderRadius: 120,
+                        width: 120,
+                        height: 120,
+                        backgroundColor: '#E9CFEC',
+                        alignItems: 'center',
+                        justifyContent: "center",
+                    }}>
+                    {!selectedImage
+                        ? (<MaterialCommunityIcons name="camera-plus" color="grey" size={45} />)
+                        : <Image source={{ uri: selectedImage }}
+                            style={{ width: "100%", height: "100%", borderRadius: 120 }}
+                        />}
+                </TouchableOpacity>
+                <View style={styles.Container}>
+                    <TextInput
+                        placeholder="Type your name..."
+                        value={displayName}
+                        onChangeText={setDisplayName}
+                        style={styles.tName}
+                    />
+                    <View style={{ borderRadius: 25, marginTop: 20 }}>
+                        <TouchableOpacity style={{
+                            backgroundColor: '#710193',
+                            // borderRadius:20,
+                            height: 'auto',
+                            alignContent: 'center'
+
+                        }}
+                            onPress={handelNextPress}
+                        >
+                            <Text style={{ alignSelf: 'center', padding: 9, fontSize: 20, color: '#ffffff' }}>Next</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </React.Fragment>
+    )
 }
-const styles=StyleSheet.create({
+const styles = StyleSheet.create({
     Container: {
-        paddingVertical:'5%',
-        paddingHorizontal:'5%',
-        backgroundColor:'white',
-        height:'auto',
-        width:'100%',
-        shadowOpacity:0.8,
-        shadowColor:'black',
-        shadowRadius:8,
-        borderBottomLeftRadius:25,
-        borderBottomRightRadius:25,
-        borderTopRightRadius:25,
-        borderTopLeftRadius:25,
-        marginTop:10,
-        
-      },
-      tName:{
+        paddingVertical: '5%',
+        paddingHorizontal: '5%',
+        backgroundColor: 'white',
+        height: 'auto',
+        width: '100%',
+        shadowOpacity: 0.8,
+        shadowColor: 'black',
+        shadowRadius: 8,
+        borderBottomLeftRadius: 25,
+        borderBottomRightRadius: 25,
+        borderTopRightRadius: 25,
+        borderTopLeftRadius: 25,
+        marginTop: 10,
+
+    },
+    tName: {
         width: '100%',
         height: 50,
         backgroundColor: '#AF69EF',
         // borderBottomWidth: 1.5,
         // borderBottomColor:'#000',
-        borderRadius:20,
-        paddingLeft:20,
-        fontSize:20,
-        color:'#ffffff',
-      },
+        borderRadius: 20,
+        paddingLeft: 20,
+        fontSize: 20,
+        color: '#ffffff',
+    },
 });
 export default Profile;

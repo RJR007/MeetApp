@@ -4,9 +4,9 @@
     "slug": "MeetApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/mapp.jpeg",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/mapp.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

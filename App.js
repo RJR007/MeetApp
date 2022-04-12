@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Image} from 'react-native';
 import React ,{useState,useEffect, Profiler}from 'react';
 import {useAssets} from 'expo-asset';
 import {onAuthStateChanged} from 'firebase/auth';
@@ -41,7 +41,14 @@ function App() {
   return () => unsubscribe();
   }, []);
   if(load){
-    return <Text style={{flex:1,justifyContent:"center"}}>Loading...</Text>
+    return (
+      <View>
+      <Image source={require('./assets/mapp.jpeg')}
+        style={styles.logo}
+        resizeMode="cover" />
+      <Text style={styles.Wtext}>MeetApp</Text>
+    </View>
+    )
   }
   return (
     <NavigationContainer>
@@ -125,6 +132,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  Wtext: {
+    color: '#710193',
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: 'center',
+    padding: 10,
+    shadowOpacity: 0.8,
+    textShadowColor: '#000000',
+  },
+  logo: {
+    flex:1,
+    alignSelf: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    resizeMode: 'cover',
+    shadowOpacity: 0.8,
+    shadowColor: 'black',
+    shadowRadius: 8,
   },
 });
 

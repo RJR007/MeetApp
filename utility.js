@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 import { storege } from './firebase';
 
 export async function pickImage(){
-    let result=ImagePicker.launchCameraAsync();
+         result=ImagePicker.launchCameraAsync();
     return  result;
 }
  
