@@ -4,6 +4,7 @@ import {
     getAuth, 
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
+    signOut
     } 
     from "firebase/auth"; 
 import { getStorage } from "firebase/storage";
@@ -40,6 +41,13 @@ export function signUp(email, password){
             alert("Please Click on 'Already have an account?' then press forgot Password!")
         }
     });
+}
+export function sign_Out(){
+    return signOut(auth).catch(function(error){
+        //alert(error.code,error.message);
+        SimpleToast.showWithGravity(error.code.substr(5), SimpleToast.LONG, SimpleToast.CENTER);
+    }).then(()=> {alert("You are logged out!")
+});
 }
 export function forgotPassword(email){
     sendPasswordResetEmail(auth, email, null)

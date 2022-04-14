@@ -36,6 +36,8 @@ function App() {
     setLoad(false); 
     if(user){
       setCurrUser(user)
+    }else{
+      setCurrUser(false)
     }
   });
   return () => unsubscribe();
@@ -122,7 +124,7 @@ function Home(){
   >
     <Tab.Screen name='Photo' component={Photo} />
     <Tab.Screen name='Chats' component={Chats} />
-    <Tab.Screen name='Status' component={Status} /> 
+    <Tab.Screen name='LogOut' component={Status} /> 
   </Tab.Navigator>
   )
 }
