@@ -26,7 +26,7 @@ const Chat = () => {
     const route = useRoute();
     const room = route.params.room;
     const { showActionSheetWithOptions } = useActionSheet();
-    const [res , setRes] = useState([]);
+    const [res , setRes] = useState("");
     const [input,setInput]=useState("");
 
     const selectedImage = route.params.image;
@@ -105,6 +105,17 @@ const Chat = () => {
     }, [messages]);
 
     async function translator(input){
+        const params = {
+            q : input,
+            source : 'en',
+            target : 'hi',
+            api_key : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+          }
+          axios.post('https://libretranslate.de/translate',params)
+          .then(result => {
+            setRes(result.data.translatedText)
+            console.log(result.data.translatedText)})
+          .catch(error => console.error(error))
         // const params = new URLSearchParams();
         // params.append('q', text);
         // params.append('source', "en");
@@ -124,21 +135,22 @@ const Chat = () => {
         //     ).catch((e)=>{
         //         console.log(e);
         //     })
-        const res = await fetch("https://libretranslate.de/translate", {
-            method: "POST",
-            body: JSON.stringify({
-                q:input,
-                source: "en",
-                target: "hi",
-                format: "text"
-            }),
-            headers: { "Content-Type": "application/json" }
-        });
-        //console.log(res);
-         const result = await res.json();
-         //console.log(res.json()); 
-        const langtrans=result.translatedText;
-      setRes(langtrans);
+    //     const res = await fetch("https://libretranslate.de/translate", {
+    //         method: "POST",
+    //         body: JSON.stringify({
+    //             q:input,
+    //             source: "en",
+    //             target: "hi",
+    //             format: "text"
+    //         }),
+    //         headers: { "Content-Type": "application/json" }
+    //     });
+    //     //console.log(res);
+    //      const result = await res.json();
+    //      //console.log(res.json()); 
+    //     const langtrans=result.translatedText;
+    //   setRes(langtrans);
+    
     }
 
     async function onSend(messages = []) {
@@ -235,8 +247,10 @@ const Chat = () => {
                                         user,
                                         _id: messageIdGenerator(),
                                     }, true);
+                                    translator(text);
                                 }
-                            }}
+                            }   
+                        }
                         >
                             <MaterialIcons name="send" size={22} color="#ffffff" />
                         </TouchableOpacity>
@@ -276,16 +290,12 @@ const Chat = () => {
                             
                         }}
                     />)}
-                     renderMessageText={(props) =>{
-                        const {
-                            currentMessage,
-                          } = props;
-                        const txt = props.currentMessage.text;
-                        const {currText}=res;
-                        if (currText){
-                          return  <MessageText/>
-                        }
-                        const result = translator(txt);
+                     renderMessageText={() =>{
+                        // const txt = props.currentMessage.text;
+                        // const {currText}=res;
+                        
+                          return  <Text style={{padding:3,color:"#ffffff",fontSize:14}}> {res} </Text>
+
                         //console.log(result);
                         console.log(JSON.stringify(res));
                         // return(
