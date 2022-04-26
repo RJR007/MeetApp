@@ -3,7 +3,7 @@ import { useRoute } from "@react-navigation/native";
 import "react-native-get-random-values";
 import { nanoid } from "nanoid";
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ImageBackground, TouchableOpacity, Image } from "react-native";
+import { View, Text, ImageBackground, TouchableOpacity, Image, AsyncStorage,Alert } from "react-native";
 import { auth, db } from "../firebase";
 import { addDoc, collection, doc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import { Actions, Bubble, GiftedChat, InputToolbar, MessageText } from "react-native-gifted-chat";
@@ -12,6 +12,7 @@ import { pickImage, uploadImage } from '../utility';
 import ImageView from "react-native-image-viewing";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import Status from "./Status"
+//import AsyncStorage from "@react-native-community/async-storage";
 const axios = require('axios').default;
 
 
@@ -26,9 +27,12 @@ const Chat = () => {
     const route = useRoute();
     const room = route.params.room;
     const { showActionSheetWithOptions } = useActionSheet();
-    const [res , setRes] = useState("");
-    const [input,setInput]=useState("");
-
+    const [resT, setResT] = useState("");
+    // const [from, setFrom] = useState("");
+    // const [to, setTo] = useState("");
+    // var f= from;
+    // var t= to;
+    //console.log(from+to);
     const selectedImage = route.params.image;
     const userB = route.params.user;
 
@@ -78,7 +82,7 @@ const Chat = () => {
                 await sendImage(selectedImage.uri, emailHash);
             }
         })();
-    }, []);
+    },[]);
 
     useEffect(() => {
         const unsubscribe = onSnapshot(roomMessageRef, (querySnapshot) => {
@@ -90,8 +94,8 @@ const Chat = () => {
                     return { ...message, createdAt: message.createdAt.toDate() };
                 }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
             appendMessages(messagesFirestore);
-            
-            
+
+
         });
         return () => unsubscribe();
     }, []);
@@ -100,57 +104,32 @@ const Chat = () => {
     const appendMessages = useCallback((messages) => {
         setMessages((previousMessages) =>
             GiftedChat.append(previousMessages, messages),
-           
+
         );
     }, [messages]);
 
-    async function translator(input){
+    async function translator(input) {
+        let restrans;
+        const from = await AsyncStorage.getItem('from');
+        const to = await AsyncStorage.getItem('to');
+        const fromP = JSON.parse(from);
+        const toP = JSON.parse(to);
         const params = {
-            q : input,
-            source : 'en',
-            target : 'hi',
-            api_key : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-          }
-          axios.post('https://libretranslate.de/translate',params)
-          .then(result => {
-            setRes(result.data.translatedText)
-            console.log(result.data.translatedText)})
-          .catch(error => console.error(error))
-        // const params = new URLSearchParams();
-        // params.append('q', text);
-        // params.append('source', "en");
-        // params.append('target', "hi");
-        // params.append('api_key', 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
-        // console.log(params);
-        // axios.post("https://libretranslate.de/docs/#/translate/post_translate",{params},
-        //     {
-        //         headers: {
-        //             'accept': 'application/json',
-        //             'Content-Type': 'application/x-www-form-urlencoded',
-        //         }
-        //     }).then((res)=>{
-        //         console.log(res.data);
-        //         console.log(res.data.translatedText);
-        //     }
-        //     ).catch((e)=>{
-        //         console.log(e);
-        //     })
-    //     const res = await fetch("https://libretranslate.de/translate", {
-    //         method: "POST",
-    //         body: JSON.stringify({
-    //             q:input,
-    //             source: "en",
-    //             target: "hi",
-    //             format: "text"
-    //         }),
-    //         headers: { "Content-Type": "application/json" }
-    //     });
-    //     //console.log(res);
-    //      const result = await res.json();
-    //      //console.log(res.json()); 
-    //     const langtrans=result.translatedText;
-    //   setRes(langtrans);
-    
+            q: input,
+            source: fromP.code,
+            target: toP.code,
+            api_key: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        }
+        axios.post('https://libretranslate.de/translate', params)
+            .then( result => {
+              restrans= result.data.translatedText;
+               //setResT(result.data.translatedText);
+               Alert.alert("Translated Message \n"+JSON.stringify(restrans));
+
+               console.log('Result: \n',JSON.stringify(restrans));
+              // return restrans;
+            })
+            .catch(error => console.log(error));
     }
 
     async function onSend(messages = []) {
@@ -190,9 +169,9 @@ const Chat = () => {
         showActionSheetWithOptions({
             options,
             cancelButtonIndex,
-            
+
         }, (buttonIndex) => {
-            
+
             switch (buttonIndex) {
                 case 0:
                     Clipboard.setString(message.text);
@@ -211,7 +190,7 @@ const Chat = () => {
         >
             <GiftedChat
                 onSend={onSend}
-                messages={ messages}
+                messages={messages}
                 user={senderUser}
                 renderAvatar={null}
                 renderActions={(props) => (
@@ -242,15 +221,17 @@ const Chat = () => {
                             }}
                             onPress={() => {
                                 if (text && onSend) {
+
                                     onSend({
-                                        text:text.trim(),
+                                        text: text.trim(),
                                         user,
                                         _id: messageIdGenerator(),
                                     }, true);
-                                    translator(text);
+                                    //translator(text);
+
                                 }
-                            }   
-                        }
+                            }
+                            }
                         >
                             <MaterialIcons name="send" size={22} color="#ffffff" />
                         </TouchableOpacity>
@@ -273,10 +254,11 @@ const Chat = () => {
                 renderBubble={(props) => (
                     <Bubble
                         {...props}
-                       
-                        onLongPress={() =>onLongPress()}
+
+                        onLongPress={() => onLongPress()}
                         textStyle={{
-                            right: { color: "#ffffff" }
+                            right: { color: "#ffffff" },
+                            left: { color: "#000000" },
                         }}
                         wrapperStyle={{
                             right: {
@@ -287,21 +269,68 @@ const Chat = () => {
                             left: {
                                 marginBottom: 7,
                             },
-                            
+
                         }}
                     />)}
-                     renderMessageText={() =>{
-                        // const txt = props.currentMessage.text;
-                        // const {currText}=res;
+                renderMessageText={(props) => {
+                    //let temp= props.currentMessage.text;
+                    let tmp;
+                        //translator(props.currentMessage.text);
+                        //console.log(temp);
+                        // const resl= await AsyncStorage.getItem("Tres");
+                        // const resLP= JSON.parse(resl);
+                        // console.log(resLP);
+                        //setResT(resLP);
                         
-                          return  <Text style={{padding:3,color:"#ffffff",fontSize:14}}> {res} </Text>
-
-                        //console.log(result);
-                        console.log(JSON.stringify(res));
-                        // return(
-                        //     <Text>{res}</Text>
-                        //     )
-                        }}
+                        return (
+                            <TouchableOpacity
+                            onPress={()=>{ translator(props.currentMessage.text); 
+                                
+                            }
+                            } 
+                            >
+                            <Text
+                                style={{ padding: 7, color: "#000000", fontSize: 14 }}>
+                               {/* {tmp == 1 ? resT:props.currentMessage.text} */}
+                               {props.currentMessage.text}
+                            </Text>
+                            </TouchableOpacity>
+                            )
+                    //props.currentMessage.text = [res];
+                    // let T= true;
+                    // if (T) {
+                    //     return (
+                    //         <TouchableOpacity
+                    //         onPress={() => T = false}
+                    //         >
+                    //             <Text
+                    //             style={{ padding: 3, color: "#000000", fontSize: 14 }}>
+                    //             {props.currentMessage.text}
+                    //         </Text>
+                    //         </TouchableOpacity>
+                    //         )
+                    // }
+                    // else {
+                    //     let temp;
+                    //     translator(props.currentMessage.text,response);
+                    //     console.log(temp);
+                    //     return (
+                    //         <TouchableOpacity
+                    //         onPress={()=> T = true } 
+                    //         >
+                    //         <Text
+                    //             style={{ padding: 3, color: "#000000", fontSize: 14 }}>
+                    //             {temp}
+                    //         </Text>
+                    //         </TouchableOpacity>
+                    //         )
+                    // }
+                    //console.log(result);
+                    //console.log(JSON.stringify(res));
+                    // return(
+                    //     <Text>{res}</Text>
+                    //     )
+                }}
                 renderMessageImage={(props) => {
                     return (
                         <View style={{ borderRadius: 10, padding: 2 }}>

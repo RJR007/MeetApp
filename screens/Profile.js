@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useDebugValue, useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet, Image } from "react-native";
+import { View, Text, Button, StyleSheet, Image, AsyncStorage } from "react-native";
 import Consatnts from "expo-constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
@@ -10,6 +10,7 @@ import { updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
 import SimpleToast from "react-native-simple-toast";
+// import AsyncStorage from '@react-native-community/async-storage';
 
 function Profile() {
     const [displayName, setDisplayName] = useState("");
@@ -27,7 +28,7 @@ function Profile() {
         })()
     }, [])
     async function handelNextPress() {
-        if(displayName == ""){
+        if (displayName == "") {
             SimpleToast.showWithGravity("Please Enter Name", SimpleToast.LONG, SimpleToast.CENTER);
             return false;
         }
@@ -48,6 +49,11 @@ function Profile() {
             updateProfile(user, userData),
             setDoc(doc(db, "users", user.uid), { ...userData, uid: user.uid })
         ])
+        // try {
+        //     AsyncStorage.setItem('UserData', userData);
+        // } catch (error) {
+        //     console.log(error);
+        // }
         navigation.navigate('Home');
     }
     async function handelProfilePhoto() {

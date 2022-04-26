@@ -1,9 +1,10 @@
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { View,Text,TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import { View,Text,TouchableOpacity, StyleSheet, TextInput, AsyncStorage } from "react-native";
 import { sign_Out } from "../firebase";
 import {Picker}  from "@react-native-picker/picker";
 import {PowerTranslator, ProviderTypes, TranslatorConfiguration, TranslatorFactory} from "react-native-power-translator"
+//import AsyncStorage from "@react-native-community/async-storage";
 //TranslatorConfiguration.setConfig(ProviderTypes.Google, 'AIzaSyB5ip6KC-9KCIjO9Q7Rm47dYJDmOdjLgM0','hi');
 const axios = require('axios').default;
 
@@ -15,6 +16,7 @@ const Status = () =>{
     const navigation=useNavigation();
     const [selectedLang,setSelectedLang]=useState("");
     const [options,setOptions]=useState([]);
+    //const [UserData, setUserData] = useState();
     //const translator = TranslatorFactory.createTranslator();
     //const {t}=translator.translate("message");
 
@@ -62,31 +64,52 @@ const Status = () =>{
         axios.get('https://libretranslate.de/languages',
         {headers:{'accept': 'application/json'}}).then(res =>{
             setOptions(res.data); 
-        })
+        });
+        // try {
+        //     let UData = AsyncStorage.getItem('UserData');
+        //     setUserData(UData);
+        //     console.log('Fatched User Profile:', UserData);
+        // } catch(error) {
+        //     console.log(error);
+        // }
+       
     },[])
+    function setLanguage(){
+        try{
+            AsyncStorage.setItem('from',JSON.stringify(from));
+            AsyncStorage.setItem('to',JSON.stringify(to));
+            alert("You are set " + from.name + " to " + to.name);
+        }catch(error){
+            console.log(error);
+        } 
+    }
 
    // curl -X POST "https://libretranslate.de/detect" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d "q=Hello%20world!&api_key=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
     return(
+        <View style={{flex:1}}>
         <View style={styles.container}>
-            <Text style={{fontSize:22,paddingLeft:10}}>Select From Language:</Text>
+            <Text style={{fontSize:22,paddingLeft:10}}>Select Language</Text>
+            <View style={styles.transBlock}>
+            <Text style={{fontSize:18,paddingLeft:10}}>From:</Text>
             <Picker
             style={styles.pick}
             selectedValue={from}
              onValueChange={(itemValue,itemIndex)=>setFrom(itemValue)}
             >
-                {options.map(opt =>  <Picker.Item key={opt.code} label={opt.name}  value={opt.code} />)}
+                {options.map(opt =>  <Picker.Item key={opt.code} label={opt.name}  value={opt} />)}
             </Picker>
-            <Text style={{fontSize:22,paddingLeft:10}}>Select To Language:</Text>
+            <Text style={{fontSize:18,paddingLeft:10}}> To:</Text>
             <Picker
             style={styles.pick}
             selectedValue={to}
              onValueChange={(itemValue,itemIndex)=>setTo(itemValue)}
             >
-                {options.map(opt =>  <Picker.Item key={opt.code} label={opt.name}  value={opt.code} />)}
+                {options.map(opt =>  <Picker.Item key={opt.code} label={opt.name}  value={opt} />)}
               
             </Picker>
-            <TextInput 
+            </View>
+            {/* <TextInput 
              multiline={true}
              numberOfLines={4}
             style={styles.box}
@@ -103,13 +126,16 @@ const Status = () =>{
             editable={false}
             //onChangeText={setOutput}
              
-            />
+            /> */}
             <TouchableOpacity
             style={styles.logoutB}
-            onPress={e=>translate()}
+            onPress={e=>setLanguage()}
             >
-                <Text style={styles.logot}>Translate</Text>
+                <Text style={styles.logot}>Set Language</Text>
             </TouchableOpacity>
+            </View>
+            
+            <View>
             <TouchableOpacity 
             style={styles.logoutB}
             onPress={()=> {
@@ -119,24 +145,28 @@ const Status = () =>{
             >
                 <Text style={styles.logot}>Logout</Text>
             </TouchableOpacity>
-
-        </View>
+            </View>
+            </View>
+        
     )
 }
 const styles= StyleSheet.create({
     container:{
         flex:1,
-        justifyContent:"center",
+        justifyContent:"flex-start",
+    },
+    transBlock:{
+        flexDirection:"row",
     },
     pick:{
         height: 50,  
-        width: "70%",  
+        width: "35%",  
         color: '#710193',
         backgroundColor:"#E9CFEC"  ,
         justifyContent:"center",
-        marginHorizontal:"14%" ,
+        marginHorizontal:"1%" ,
         margin: 10,
-        
+        borderRadius:10,
     },
     logoutB:{
         justifyContent:"center",

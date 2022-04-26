@@ -124,7 +124,7 @@ function Home(){
   >
     <Tab.Screen name='Photo' component={Photo} />
     <Tab.Screen name='Chats' component={Chats} />
-    <Tab.Screen name='LogOut' component={Status} /> 
+    <Tab.Screen name='Setting' component={Status} /> 
   </Tab.Navigator>
   )
 }
